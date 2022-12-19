@@ -83,21 +83,36 @@ impl From<&str> for PlayingField {
         };
 
         PlayingField { stacks: stack_map }
+    }
+}
 
-        // 4n + 2 for n = i-1
-        // .for_each(|slice| println!("{}", slice));
+// impl PlayingField {
+//     fn execute_command(mut self, cmd: &Command) {
+//         for _ in 0..cmd.amount {
+//             let crate_to_move = self.stacks.get_mut(&cmd.from).unwrap().pop().unwrap();
+//             self.stacks.get_mut(&cmd.to).unwrap().push(crate_to_move)
+//         }
+//     }
+// }
+
+impl Command {
+    fn execute_on_field(self, pf: &mut PlayingField) {
+        for _ in 0..self.amount {
+            let crate_to_move = pf.stacks.get_mut(&self.from).unwrap().pop().unwrap();
+            pf.stacks.get_mut(&self.to).unwrap().push(crate_to_move)
+        }
     }
 }
 
 fn main() {
-    let input_file = "example.txt";
+    let input_file = "input.txt";
     let input_text = fs::read_to_string(input_file).expect("File shoudl exists");
-    let pf: PlayingField = input_text
+    let mut pf: PlayingField = input_text
         .split("\n\n")
         .next()
         .expect("Playing field should be readable")
         .into();
-    dbg!(pf);
+
     // For now skipping the playing field
     let commands: Vec<Command> = input_text
         .split("\n\n")
@@ -108,7 +123,13 @@ fn main() {
         .into_iter()
         .map(|line| line.into())
         .collect();
-    commands
-        .iter()
-        .for_each(|command| println!("Command: {:?}", command));
+
+    for command in commands {
+        command.execute_on_field(&mut pf)
+    }
+
+    for key in 1..=pf.stacks.len() as u32 {
+        // print!("{}", key);
+        print!("{}", pf.stacks.get(&key).unwrap().last().unwrap().text);
+    }
 }
