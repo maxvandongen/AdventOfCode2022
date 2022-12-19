@@ -86,27 +86,38 @@ impl From<&str> for PlayingField {
     }
 }
 
-// impl PlayingField {
-//     fn execute_command(mut self, cmd: &Command) {
-//         for _ in 0..cmd.amount {
-//             let crate_to_move = self.stacks.get_mut(&cmd.from).unwrap().pop().unwrap();
-//             self.stacks.get_mut(&cmd.to).unwrap().push(crate_to_move)
-//         }
-//     }
-// }
+impl PlayingField {
+    fn print_key(self) {
+        for key in 1..=self.stacks.len() as u32 {
+            // print!("{}", key);
+            print!("{}", self.stacks.get(&key).unwrap().last().unwrap().text);
+        }
+    }
+}
 
 impl Command {
-    fn execute_on_field(self, pf: &mut PlayingField) {
+    fn execute_on_field_one_at_a_time(self, pf: &mut PlayingField) {
         for _ in 0..self.amount {
             let crate_to_move = pf.stacks.get_mut(&self.from).unwrap().pop().unwrap();
             pf.stacks.get_mut(&self.to).unwrap().push(crate_to_move)
+        }
+    }
+
+    fn execute_on_field_by_stack(self, pf: &mut PlayingField) {
+        let mut crates: Vec<Crate> = vec![];
+        for _ in 0..self.amount {
+            crates.push(pf.stacks.get_mut(&self.from).unwrap().pop().unwrap());
+        }
+        crates.reverse();
+        for crate_to_add in crates {
+            pf.stacks.get_mut(&self.to).unwrap().push(crate_to_add);
         }
     }
 }
 
 fn main() {
     let input_file = "input.txt";
-    let input_text = fs::read_to_string(input_file).expect("File shoudl exists");
+    let input_text = fs::read_to_string(input_file).expect("File should exists");
     let mut pf: PlayingField = input_text
         .split("\n\n")
         .next()
@@ -125,11 +136,36 @@ fn main() {
         .collect();
 
     for command in commands {
-        command.execute_on_field(&mut pf)
+        command.execute_on_field_one_at_a_time(&mut pf)
     }
 
-    for key in 1..=pf.stacks.len() as u32 {
-        // print!("{}", key);
-        print!("{}", pf.stacks.get(&key).unwrap().last().unwrap().text);
+    print!("Part 1: ");
+    pf.print_key();
+    println!();
+
+    let input_text = fs::read_to_string(input_file).expect("File should exists");
+    let mut pf: PlayingField = input_text
+        .split("\n\n")
+        .next()
+        .expect("Playing field should be readable")
+        .into();
+
+    // For now skipping the playing field
+    let commands: Vec<Command> = input_text
+        .split("\n\n")
+        .skip(1)
+        .next()
+        .unwrap()
+        .split("\n")
+        .into_iter()
+        .map(|line| line.into())
+        .collect();
+
+    for command in commands {
+        command.execute_on_field_by_stack(&mut pf)
     }
+
+    print!("Part 2: ");
+    pf.print_key();
+    println!();
 }
