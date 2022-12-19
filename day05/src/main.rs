@@ -4,12 +4,8 @@ struct Crate {
     text: String,
 }
 
-struct Stack {
-    stack: Vec<Crate>,
-}
-
 struct PlayingField {
-    stacks: HashMap<u32, Stack>,
+    stacks: HashMap<u32, Vec<Crate>>,
 }
 #[derive(Debug)]
 struct Command {
@@ -43,13 +39,53 @@ impl From<&str> for Command {
 
 impl From<&str> for PlayingField {
     fn from(value: &str) -> Self {
-        todo!()
+        let mut row_iter = value.split("\n").collect::<Vec<&str>>().into_iter().rev();
+
+        let stack_count = row_iter
+            .next()
+            .unwrap()
+            .split("   ")
+            .into_iter()
+            .last()
+            .unwrap()
+            .trim()
+            .parse::<u32>()
+            .unwrap();
+
+        let stack_map = {
+            let mut hashmap = HashMap::new();
+            for index in 1..=stack_count {
+                hashmap.insert(index, vec![]);
+            }
+
+            while let Some(line) = row_iter.next() {
+                let mut chars = line.chars().skip(1);
+
+                for index in 1..=stack_count {
+                    match chars.next().unwrap() {
+                        ' ' => unreachable!(),
+                        value => hashmap.get_mut(&index).unwrap().push(Crate {
+                            text: value.to_string(),
+                        }),
+                    }
+                    chars = chars.skip(4);
+                }
+            }
+
+            hashmap
+        };
+
+        PlayingField { stacks: stack_map }
+
+        // 4n + 2 for n = i-1
+        // .for_each(|slice| println!("{}", slice));
     }
 }
 
 fn main() {
     let input_file = "example.txt";
     let input_text = fs::read_to_string(input_file).unwrap();
+    let pf: PlayingField = input_text.split("\n\n").next().unwrap().into();
     // For now skipping the playing field
     let commands: Vec<Command> = input_text
         .split("\n\n")
