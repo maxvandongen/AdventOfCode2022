@@ -1,9 +1,11 @@
 use std::{collections::HashMap, fs};
 
+#[derive(Debug)]
 struct Crate {
     text: String,
 }
 
+#[derive(Debug)]
 struct PlayingField {
     stacks: HashMap<u32, Vec<Crate>>,
 }
@@ -43,32 +45,37 @@ impl From<&str> for PlayingField {
 
         let stack_count = row_iter
             .next()
-            .unwrap()
+            .expect("Should have a row")
             .split("   ")
             .into_iter()
             .last()
-            .unwrap()
+            .expect("Should have a last item")
             .trim()
             .parse::<u32>()
-            .unwrap();
+            .expect("Should be parseable to int");
 
         let stack_map = {
             let mut hashmap = HashMap::new();
-            for index in 1..=stack_count {
-                hashmap.insert(index, vec![]);
+            for index in 0..stack_count {
+                hashmap.insert(index + 1, vec![]);
             }
 
             while let Some(line) = row_iter.next() {
-                let mut chars = line.chars().skip(1);
+                let mut chars = line.chars();
 
-                for index in 1..=stack_count {
-                    match chars.next().unwrap() {
-                        ' ' => unreachable!(),
-                        value => hashmap.get_mut(&index).unwrap().push(Crate {
+                _ = chars.next();
+
+                for index in 1..=stack_count + 1 {
+                    match chars.next() {
+                        Some(' ') => {}
+                        Some(value) => hashmap.get_mut(&index).unwrap().push(Crate {
                             text: value.to_string(),
                         }),
+                        None => {}
                     }
-                    chars = chars.skip(4);
+                    _ = chars.next();
+                    _ = chars.next();
+                    _ = chars.next();
                 }
             }
 
@@ -84,8 +91,13 @@ impl From<&str> for PlayingField {
 
 fn main() {
     let input_file = "example.txt";
-    let input_text = fs::read_to_string(input_file).unwrap();
-    let pf: PlayingField = input_text.split("\n\n").next().unwrap().into();
+    let input_text = fs::read_to_string(input_file).expect("File shoudl exists");
+    let pf: PlayingField = input_text
+        .split("\n\n")
+        .next()
+        .expect("Playing field should be readable")
+        .into();
+    dbg!(pf);
     // For now skipping the playing field
     let commands: Vec<Command> = input_text
         .split("\n\n")
