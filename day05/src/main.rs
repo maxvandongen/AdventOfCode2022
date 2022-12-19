@@ -11,7 +11,7 @@ struct Stack {
 struct PlayingField {
     stacks: HashMap<u32, Stack>,
 }
-
+#[derive(Debug)]
 struct Command {
     from: u32,
     to: u32,
@@ -20,7 +20,24 @@ struct Command {
 
 impl From<&str> for Command {
     fn from(value: &str) -> Self {
-        todo!()
+        let mut splits = value.split(" from ");
+        let amount = splits
+            .next()
+            .unwrap()
+            .replace("move ", "")
+            .parse::<u32>()
+            .unwrap();
+        let (from, to) = {
+            let mut stacks_index = splits.next().unwrap().split(" to ");
+            let from = stacks_index.next().unwrap().trim().parse::<u32>().unwrap();
+            let to = stacks_index.next().unwrap().trim().parse::<u32>().unwrap();
+            (from, to)
+        };
+        Command {
+            from: from,
+            to: to,
+            amount: amount,
+        }
     }
 }
 
@@ -43,4 +60,7 @@ fn main() {
         .into_iter()
         .map(|line| line.into())
         .collect();
+    commands
+        .iter()
+        .for_each(|command| println!("Command: {:?}", command));
 }
